@@ -1,0 +1,11 @@
+{
+  "extends": "@strapi/typescript-utils/tsconfigs/admin",
+  "compilerOptions": {
+    "outDir": "../../dist/admin",
+    "rootDir": ".",
+    "declaration": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["custom.d.ts", "src/"],
+  "exclude": ["node_modules/", "dist/"]
+}
