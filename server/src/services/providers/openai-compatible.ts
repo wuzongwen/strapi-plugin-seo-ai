@@ -33,6 +33,8 @@ CRITICAL REQUIREMENTS — all fields are mandatory:
 
    For Article: include @context, @type, @id, headline, description, datePublished, dateModified, author, publisher, mainEntityOfPage, image.
 
+   IMPORTANT: If "--- Provided Metadata ---" appears in the content, those values (author, dates, image URL) were extracted from real form fields. You MUST use them directly in structuredData — do not guess or omit them.
+
    For FAQPage: include @context, @type, "mainEntity" as an array of Question items. Each Question must have "name" (the question text) and "acceptedAnswer" (an Answer object with "text"). Example:
    {
      "@context": "https://schema.org",
@@ -79,6 +81,7 @@ export async function generateWithOpenAICompatible(
   content: string,
   config: PluginConfig,
   strapi: Core.Strapi,
+  metadata?: Record<string, unknown>,
 ): Promise<SeoGenerationResult> {
   const baseURL = config.baseURL || 'https://api.openai.com/v1';
 
@@ -101,7 +104,7 @@ export async function generateWithOpenAICompatible(
       },
       {
         role: 'user',
-        content: `Content:\n${content}`,
+        content: `Content:\n${content}${metadata && Object.keys(metadata).length > 0 ? '\n\n--- Provided Metadata (use these exact values in structuredData when applicable) ---\n' + JSON.stringify(metadata, null, 2) : ''}`,
       },
     ],
   });

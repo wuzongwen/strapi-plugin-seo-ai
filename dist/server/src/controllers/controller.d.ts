@@ -3,6 +3,7 @@ export interface GenerateRequestCtx {
     request: {
         body: {
             content?: string;
+            metadata?: Record<string, unknown>;
         };
     };
     badRequest: (message: string) => void;

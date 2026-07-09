@@ -7,4 +7,4 @@ import { SeoGenerationResult } from './openai-compatible';
  * Since Anthropic does not support a native JSON mode, we prefill
  * the assistant response with '{' to force JSON output.
  */
-export declare function generateWithAnthropic(content: string, config: PluginConfig, strapi: Core.Strapi): Promise<SeoGenerationResult>;
+export declare function generateWithAnthropic(content: string, config: PluginConfig, strapi: Core.Strapi, metadata?: Record<string, unknown>): Promise<SeoGenerationResult>;

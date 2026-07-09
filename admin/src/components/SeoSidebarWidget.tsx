@@ -144,6 +144,54 @@ const SeoSidebarWidget = () => {
     return undefined;
   };
 
+  /**
+   * Extracts structured metadata from form values for JSON-LD generation.
+   * Scans for author, datePublished, dateModified, and image fields.
+   */
+  const extractMetadataFromValues = (vals: Record<string, unknown>): Record<string, unknown> => {
+    const metadata: Record<string, unknown> = {};
+
+    // --- Author detection ---
+    const authorFields = ['author', 'authorName', 'writer', 'creator', 'byline'];
+    for (const field of authorFields) {
+      const val = vals[field];
+      if (!val) continue;
+      if (typeof val === 'string') { metadata.author = val; break; }
+      if (typeof val === 'object' && !Array.isArray(val)) {
+        const obj = val as Record<string, unknown>;
+        const name = obj.name || obj.username || obj.displayName || obj.title || obj.email;
+        if (name) { metadata.author = { '@type': 'Person', name }; break; }
+      }
+      if (Array.isArray(val) && val.length === 1 && typeof val[0] === 'object') {
+        const obj = val[0] as Record<string, unknown>;
+        const name = obj.name || obj.username || obj.displayName || obj.title;
+        if (name) { metadata.author = { '@type': 'Person', name }; break; }
+      }
+    }
+
+    // --- Date detection ---
+    const dateFields = ['datePublished', 'publishDate', 'publishedAt', 'published', 'date'];
+    for (const field of dateFields) {
+      const val = vals[field];
+      if (val && typeof val === 'string') { metadata.datePublished = val; break; }
+    }
+
+    const modifiedFields = ['dateModified', 'updatedAt', 'modified', 'lastUpdated'];
+    for (const field of modifiedFields) {
+      const val = vals[field];
+      if (val && typeof val === 'string') { metadata.dateModified = val; break; }
+    }
+
+    // --- Image ---
+    const img = findContentImage(vals);
+    if (img) {
+      const url = (img as Record<string, unknown>).url;
+      if (url && typeof url === 'string') metadata.image = url;
+    }
+
+    return metadata;
+  };
+
   const handleGenerateClick = async () => {
     try {
       const contentToAnalyze = extractContentFromValues(values);
@@ -161,8 +209,11 @@ const SeoSidebarWidget = () => {
 
       setIsLoading(true);
 
+      const metadata = extractMetadataFromValues(values);
+
       const { data } = await post('/strapi-plugin-seo-ai/generate', {
         content: contentToAnalyze,
+        metadata,
       });
 
       if (data?.data) {

@@ -4,6 +4,7 @@ export interface GenerateRequestCtx {
   request: {
     body: {
       content?: string;
+      metadata?: Record<string, unknown>;
     };
   };
   badRequest: (message: string) => void;
@@ -16,7 +17,7 @@ const controller = ({ strapi }: { strapi: Core.Strapi }) => ({
    * Generates AI-powered SEO metadata based on provided content.
    */
   async generate(ctx: GenerateRequestCtx) {
-    const { content } = ctx.request.body;
+    const { content, metadata } = ctx.request.body;
 
     if (!content) {
       return ctx.badRequest('Content is required');
@@ -26,7 +27,7 @@ const controller = ({ strapi }: { strapi: Core.Strapi }) => ({
       const result = await strapi
         .plugin('strapi-plugin-seo-ai')
         .service('service')
-        .generateSeo(content);
+        .generateSeo(content, metadata);
 
       ctx.body = { data: result };
     } catch (error: unknown) {

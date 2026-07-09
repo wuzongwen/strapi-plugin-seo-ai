@@ -13,6 +13,7 @@ export async function generateWithAnthropic(
   content: string,
   config: PluginConfig,
   strapi: Core.Strapi,
+  metadata?: Record<string, unknown>,
 ): Promise<SeoGenerationResult> {
   const client = new Anthropic({
     apiKey: config.apiKey,
@@ -28,7 +29,7 @@ export async function generateWithAnthropic(
     messages: [
       {
         role: 'user',
-        content: `Content:\n${content}`,
+        content: `Content:\n${content}${metadata && Object.keys(metadata).length > 0 ? '\n\n--- Provided Metadata (use these exact values in structuredData when applicable) ---\n' + JSON.stringify(metadata, null, 2) : ''}`,
       },
       {
         // Prefill assistant with '{' to force JSON output

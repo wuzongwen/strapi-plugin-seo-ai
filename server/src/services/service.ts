@@ -10,9 +10,10 @@ const service = ({ strapi }: { strapi: Core.Strapi }) => ({
    * the configured AI provider (OpenAI-compatible or Anthropic).
    *
    * @param content - Raw text content for analysis.
+   * @param metadata - Optional structured metadata from form fields (author, dates, image).
    * @returns Parsed JSON metadata with title, description, keywords, metaRobots, and structuredData.
    */
-  async generateSeo(content: string): Promise<SeoGenerationResult> {
+  async generateSeo(content: string, metadata?: Record<string, unknown>): Promise<SeoGenerationResult> {
     if (!content) {
       throw new Error('Content is required to generate SEO');
     }
@@ -31,11 +32,11 @@ const service = ({ strapi }: { strapi: Core.Strapi }) => ({
 
     try {
       if (config.provider === 'anthropic') {
-        return await generateWithAnthropic(content, config, strapi);
+        return await generateWithAnthropic(content, config, strapi, metadata);
       }
 
       // Default: openai-compatible
-      return await generateWithOpenAICompatible(content, config, strapi);
+      return await generateWithOpenAICompatible(content, config, strapi, metadata);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       strapi.log.error(`SEO AI: Generation failed — ${message}`);

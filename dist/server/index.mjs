@@ -42,12 +42,12 @@ const controller = ({ strapi }) => ({
    * Generates AI-powered SEO metadata based on provided content.
    */
   async generate(ctx) {
-    const { content } = ctx.request.body;
+    const { content, metadata } = ctx.request.body;
     if (!content) {
       return ctx.badRequest("Content is required");
     }
     try {
-      const result = await strapi.plugin("strapi-plugin-seo-ai").service("service").generateSeo(content);
+      const result = await strapi.plugin("strapi-plugin-seo-ai").service("service").generateSeo(content, metadata);
       ctx.body = { data: result };
     } catch (error) {
       ctx.internalServerError(error instanceof Error ? error.message : String(error));
@@ -94,6 +94,8 @@ CRITICAL REQUIREMENTS — all fields are mandatory:
 
    For Article: include @context, @type, @id, headline, description, datePublished, dateModified, author, publisher, mainEntityOfPage, image.
 
+   IMPORTANT: If "--- Provided Metadata ---" appears in the content, those values (author, dates, image URL) were extracted from real form fields. You MUST use them directly in structuredData — do not guess or omit them.
+
    For FAQPage: include @context, @type, "mainEntity" as an array of Question items. Each Question must have "name" (the question text) and "acceptedAnswer" (an Answer object with "text"). Example:
    {
      "@context": "https://schema.org",
@@ -129,7 +131,7 @@ Return ONLY valid JSON in this exact format:
   "canonicalURL": ""
 }
 `;
-async function generateWithOpenAICompatible(content, config2, strapi) {
+async function generateWithOpenAICompatible(content, config2, strapi, metadata) {
   const baseURL = config2.baseURL || "https://api.openai.com/v1";
   const client = new OpenAI({
     apiKey: config2.apiKey,
@@ -149,7 +151,7 @@ async function generateWithOpenAICompatible(content, config2, strapi) {
       {
         role: "user",
         content: `Content:
-${content}`
+${content}${metadata && Object.keys(metadata).length > 0 ? "\n\n--- Provided Metadata (use these exact values in structuredData when applicable) ---\n" + JSON.stringify(metadata, null, 2) : ""}`
       }
     ]
   });
@@ -160,7 +162,7 @@ ${content}`
   strapi.log.info(`SEO AI: Success with ${config2.model}`);
   return JSON.parse(raw);
 }
-async function generateWithAnthropic(content, config2, strapi) {
+async function generateWithAnthropic(content, config2, strapi, metadata) {
   const client = new Anthropic({
     apiKey: config2.apiKey
   });
@@ -174,7 +176,7 @@ async function generateWithAnthropic(content, config2, strapi) {
       {
         role: "user",
         content: `Content:
-${content}`
+${content}${metadata && Object.keys(metadata).length > 0 ? "\n\n--- Provided Metadata (use these exact values in structuredData when applicable) ---\n" + JSON.stringify(metadata, null, 2) : ""}`
       },
       {
         // Prefill assistant with '{' to force JSON output
@@ -197,9 +199,10 @@ const service = ({ strapi }) => ({
    * the configured AI provider (OpenAI-compatible or Anthropic).
    *
    * @param content - Raw text content for analysis.
+   * @param metadata - Optional structured metadata from form fields (author, dates, image).
    * @returns Parsed JSON metadata with title, description, keywords, metaRobots, and structuredData.
    */
-  async generateSeo(content) {
+  async generateSeo(content, metadata) {
     if (!content) {
       throw new Error("Content is required to generate SEO");
     }
@@ -213,9 +216,9 @@ const service = ({ strapi }) => ({
     strapi.log.info(`SEO AI: Using provider "${config2.provider}"`);
     try {
       if (config2.provider === "anthropic") {
-        return await generateWithAnthropic(content, config2, strapi);
+        return await generateWithAnthropic(content, config2, strapi, metadata);
       }
-      return await generateWithOpenAICompatible(content, config2, strapi);
+      return await generateWithOpenAICompatible(content, config2, strapi, metadata);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       strapi.log.error(`SEO AI: Generation failed — ${message}`);
