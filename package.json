@@ -35,6 +35,7 @@
     "watch": "strapi-plugin watch",
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
+    "prepare": "npm run build",
     "test:ts:front": "run -T tsc -p admin/tsconfig.json",
     "test:ts:back": "run -T tsc -p server/tsconfig.json"
   },
@@ -80,11 +81,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-org/strapi-plugin-seo-ai.git"
+    "url": "git+https://github.com/wuzongwen/strapi-plugin-seo-ai.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/strapi-plugin-seo-ai/issues"
+    "url": "https://github.com/wuzongwen/strapi-plugin-seo-ai/issues"
   },
-  "homepage": "https://github.com/your-org/strapi-plugin-seo-ai#readme",
+  "homepage": "https://github.com/wuzongwen/strapi-plugin-seo-ai#readme",
   "author": ""
 }
