@@ -151,21 +151,59 @@ const SeoSidebarWidget = () => {
         }
       }
     }
-    const dateFields = ["datePublished", "publishDate", "publishedAt", "published", "date"];
+    const toDateString = (val) => {
+      if (!val) return null;
+      if (typeof val === "string") return val;
+      if (val instanceof Date) return val.toISOString();
+      if (typeof val === "object" && typeof val.toISOString === "function") {
+        return val.toISOString();
+      }
+      return null;
+    };
+    const dateFields = [
+      "datePublished",
+      "publishDate",
+      "publish_date",
+      "publishedAt",
+      "published",
+      "date",
+      "postDate",
+      "post_date",
+      "articleDate",
+      "article_date",
+      "releaseDate",
+      "release_date"
+    ];
     for (const field of dateFields) {
-      const val = vals[field];
-      if (val && typeof val === "string") {
-        metadata.datePublished = val;
+      const str = toDateString(vals[field]);
+      if (str) {
+        metadata.datePublished = str;
         break;
       }
     }
-    const modifiedFields = ["dateModified", "updatedAt", "modified", "lastUpdated"];
+    if (!metadata.datePublished) {
+      const createdAt = toDateString(vals["createdAt"]);
+      if (createdAt) metadata.datePublished = createdAt;
+    }
+    const modifiedFields = [
+      "dateModified",
+      "updatedAt",
+      "modified",
+      "lastUpdated",
+      "last_updated",
+      "modifiedAt",
+      "modified_at"
+    ];
     for (const field of modifiedFields) {
-      const val = vals[field];
-      if (val && typeof val === "string") {
-        metadata.dateModified = val;
+      const str = toDateString(vals[field]);
+      if (str) {
+        metadata.dateModified = str;
         break;
       }
+    }
+    if (!metadata.dateModified) {
+      const updatedAt = toDateString(vals["updatedAt"]);
+      if (updatedAt) metadata.dateModified = updatedAt;
     }
     const img = findContentImage(vals);
     if (img) {

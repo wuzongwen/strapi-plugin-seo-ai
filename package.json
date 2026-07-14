@@ -35,7 +35,6 @@
     "watch": "strapi-plugin watch",
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
-    "prepare": "npm run build",
     "test:ts:front": "run -T tsc -p admin/tsconfig.json",
     "test:ts:back": "run -T tsc -p server/tsconfig.json"
   },
@@ -87,5 +86,5 @@
     "url": "https://github.com/wuzongwen/strapi-plugin-seo-ai/issues"
   },
   "homepage": "https://github.com/wuzongwen/strapi-plugin-seo-ai#readme",
-  "author": ""
+  "author": "wuzongwen"
 }

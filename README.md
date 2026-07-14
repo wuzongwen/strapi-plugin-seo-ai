@@ -258,6 +258,54 @@ Strapi's REST API returns `structuredData` as a native JSON object — no extra 
 
 > ⚠️ AI-generated JSON-LD may need manual review. Missing data (dates, authors) won't be invented by the AI — fill them in yourself if needed.
 
+### 6. Retrieve SEO via API
+
+Use the standard Strapi Content API to fetch SEO data for your frontend:
+
+```bash
+# Single entry
+GET /api/articles/{documentId}?populate=seo
+
+# Collection
+GET /api/articles?populate=seo
+```
+
+`structuredData` is returned as a native JSON object — no extra parsing needed.
+
+## Field Naming Convention for Auto-Detection
+
+When you click **"Generate with AI"**, the plugin scans your content type's form fields to extract text content and structured metadata. Below are the field names it recognizes.
+
+### Text Content Fields (for AI analysis)
+
+```
+title, name, headline, subject, content, body,
+description, text, article, summary, category,
+tags, keywords, slug
+```
+
+> If none of the above are found, the plugin falls back to scanning **all fields** with string values longer than 50 characters.
+
+### Structured Metadata Fields (for accurate JSON-LD)
+
+| JSON-LD Field | Scanned Field Names (first match wins) | Value Type |
+|---|---|---|
+| **author** | `author`, `authorName`, `writer`, `creator`, `byline` | Plain text, or relation object with `name`/`username`/`displayName` |
+| **datePublished** | `datePublished`, `publishDate`, `publish_date`, `publishedAt`, `published`, `date`, `postDate`, `post_date`, `articleDate`, `article_date`, `releaseDate`, `release_date` | ISO date string or Date object |
+| ↳ **Fallback** | `createdAt` (Strapi built-in) | |
+| **dateModified** | `dateModified`, `updatedAt`, `modified`, `lastUpdated`, `last_updated`, `modifiedAt`, `modified_at` | ISO date string or Date object |
+| ↳ **Fallback** | `updatedAt` (Strapi built-in) | |
+| **image** | `main_image`, `cover`, `image`, `thumbnail`, `featuredImage`, `featured_image`, `banner`, `picture`, `photo`, `img`, `avatar`, `logo`, `hero` | Strapi media relation (single image) |
+
+> Both **camelCase** (`publishDate`) and **snake_case** (`publish_date`) conventions are supported.
+
+### Best Practices
+
+1. **Use `publishedAt` for publication date** — Strapi 5 includes this built-in lifecycle field on every content type. The plugin detects it automatically.
+2. **Use `author` for the author field** — if it's a relation, ensure the related entity has a `name` or `username` field.
+3. **Name your SEO component field `seo`** (lowercase) — the plugin looks for `seo`, `SEO`, and `Seo` in that order.
+4. **If auto-detection misses a field**, rename it to one of the names above, or fill in manually after generation.
+
 ## Troubleshooting
 
 - **Widget not appearing?** Rebuild the admin panel (`npm run build`).

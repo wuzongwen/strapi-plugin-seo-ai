@@ -253,6 +253,54 @@ AI 自动推断内容类型，生成对应的 JSON-LD：
 </script>
 ```
 
+### 6. 通过 API 获取 SEO 数据
+
+通过 Strapi 标准 Content API 获取 SEO 数据：
+
+```bash
+# 单条内容
+GET /api/articles/{documentId}?populate=seo
+
+# 列表
+GET /api/articles?populate=seo
+```
+
+`structuredData` 以原生 JSON 对象返回，无需额外解析。
+
+## 字段命名规范与自动检测
+
+在内容管理器侧边栏点击 **"AI 生成"** 时，插件会自动扫描内容类型的表单字段，提取正文文本和结构化元数据。以下是插件识别的字段名列表。
+
+### 正文内容字段（用于 AI 分析）
+
+```
+title, name, headline, subject, content, body,
+description, text, article, summary, category,
+tags, keywords, slug
+```
+
+> 如果以上字段均为空，插件会回退扫描**所有**长度超过 50 字符的字符串字段。
+
+### 结构化元数据字段（用于精准 JSON-LD）
+
+| JSON-LD 字段 | 扫描的字段名（按优先级） | 值类型 |
+|---|---|---|
+| **author（作者）** | `author`, `authorName`, `writer`, `creator`, `byline` | 纯文本，或包含 `name`/`username`/`displayName` 的关系对象 |
+| **datePublished（发布时间）** | `datePublished`, `publishDate`, `publish_date`, `publishedAt`, `published`, `date`, `postDate`, `post_date`, `articleDate`, `article_date`, `releaseDate`, `release_date` | ISO 日期字符串或 Date 对象 |
+| ↳ **兜底** | `createdAt`（Strapi 内置字段） | |
+| **dateModified（修改时间）** | `dateModified`, `updatedAt`, `modified`, `lastUpdated`, `last_updated`, `modifiedAt`, `modified_at` | ISO 日期字符串或 Date 对象 |
+| ↳ **兜底** | `updatedAt`（Strapi 内置字段） | |
+| **image（图片）** | `main_image`, `cover`, `image`, `thumbnail`, `featuredImage`, `featured_image`, `banner`, `picture`, `photo`, `img`, `avatar`, `logo`, `hero` | Strapi 媒体关联（单图） |
+
+> 插件同时支持 **camelCase**（如 `publishDate`）和 **snake_case**（如 `publish_date`）两种命名风格。
+
+### 最佳实践
+
+1. **发布时间使用 `publishedAt`** — Strapi 5 每个内容类型都内置了此生命周期字段，插件会自动检测。
+2. **作者字段使用 `author`** — 如果是关联关系，请确保关联实体包含 `name` 或 `username` 字段。
+3. **SEO 组件字段命名为 `seo`**（小写）— 插件按 `seo` → `SEO` → `Seo` 的顺序查找。
+4. **如果自动检测未命中**，可将字段重命名为上表列出的名称，或在生成后手动补充缺失值。
+
 ## 故障排除
 
 - **侧边栏未出现？** 重新构建管理面板（`npm run build`）。
